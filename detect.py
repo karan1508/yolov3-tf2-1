@@ -14,7 +14,7 @@ flags.DEFINE_string('classes', './data/coco.names', 'path to classes file')
 flags.DEFINE_string('weights', './checkpoints/yolov3.tf',
                     'path to weights file')
 flags.DEFINE_boolean('tiny', False, 'yolov3 or yolov3-tiny')
-flags.DEFINE_integer('size', 416, 'resize images to')
+flags.DEFINE_multi_integer('size', [416, 416], 'resize images to ')
 flags.DEFINE_string('image', './data/girl.png', 'path to input image')
 flags.DEFINE_string('tfrecord', None, 'tfrecord instead of image')
 flags.DEFINE_string('output', './output.jpg', 'path to output image')

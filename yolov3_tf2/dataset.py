@@ -8,10 +8,9 @@ def transform_targets_for_output(y_true, grid_size, anchor_idxs):
 
     # y_true_out: (N, grid, grid, anchors, [x, y, w, h, obj, class])
     grid_size_y, grid_size_x = grid_size
-    grid_size = tf.convert_to_tensor(grid_size)
+    grid_size = tf.convert_to_tensor((grid_size_x, grid_size_y), dtype=tf.float32)
     y_true_out = tf.zeros(
         (N, grid_size_y, grid_size_x, tf.shape(anchor_idxs)[0], 6))
-
     anchor_idxs = tf.cast(anchor_idxs, tf.int32)
 
     indexes = tf.TensorArray(tf.int32, 1, dynamic_size=True)
@@ -30,7 +29,6 @@ def transform_targets_for_output(y_true, grid_size, anchor_idxs):
 
                 anchor_idx = tf.cast(tf.where(anchor_eq), tf.int32)
                 grid_xy = tf.cast(box_xy // (1/grid_size), tf.int32)
-
                 # grid[y][x][anchor] = (tx, ty, bw, bh, obj, class)
                 indexes = indexes.write(
                     idx, [i, grid_xy[1], grid_xy[0], anchor_idx[0][0]])
@@ -38,8 +36,8 @@ def transform_targets_for_output(y_true, grid_size, anchor_idxs):
                     idx, [box[0], box[1], box[2], box[3], 1, y_true[i][j][4]])
                 idx += 1
 
-    # tf.print(indexes.stack())
-    # tf.print(updates.stack())
+    #tf.print(indexes.stack())
+    #tf.print(updates.stack())
 
     return tf.tensor_scatter_nd_update(
         y_true_out, indexes.stack(), updates.stack())
@@ -118,7 +116,6 @@ def parse_tfrecord(tfrecord, class_table, size):
 
     paddings = [[0, FLAGS.yolo_max_boxes - tf.shape(y_train)[0]], [0, 0]]
     y_train = tf.pad(y_train, paddings)
-
     return x_train, y_train
 
 

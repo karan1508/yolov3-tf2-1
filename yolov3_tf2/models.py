@@ -161,7 +161,7 @@ def yolo_boxes(pred, anchors, classes):
     pred_box = tf.concat((box_xy, box_wh), axis=-1)  # original xywh for loss
 
     # !!! grid[x][y] == (y, x)
-    grid = tf.meshgrid(tf.range(grid_size_y), tf.range(grid_size_x))
+    grid = tf.meshgrid(tf.range(grid_size_x), tf.range(grid_size_y))
     grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
 
     box_xy = (box_xy + tf.cast(grid, tf.float32)) / \
@@ -202,7 +202,7 @@ def yolo_nms(outputs, anchors, masks, classes):
     return boxes, scores, classes, valid_detections
 
 
-def YoloV3(size=None, channels=3, anchors=yolo_anchors,
+def YoloV3(size=(None, None), channels=3, anchors=yolo_anchors,
            masks=yolo_anchor_masks, classes=80, training=False):
     x = inputs = Input([size[0], size[1], channels], name='input')
 
@@ -233,10 +233,9 @@ def YoloV3(size=None, channels=3, anchors=yolo_anchors,
     return Model(inputs, outputs, name='yolov3')
 
 
-def YoloV3Tiny(size=None, channels=3, anchors=yolo_tiny_anchors,
+def YoloV3Tiny(size=(None, None), channels=3, anchors=yolo_tiny_anchors,
                masks=yolo_tiny_anchor_masks, classes=80, training=False):
     x = inputs = Input([size[0], size[1], channels], name='input')
-
     x_8, x = DarknetTiny(name='yolo_darknet')(x)
 
     x = YoloConvTiny(256, name='yolo_conv_0')(x)
@@ -278,11 +277,11 @@ def YoloLoss(anchors, classes=80, ignore_thresh=0.5):
 
         # 3. inverting the pred box equations
         grid_size_y = tf.shape(y_true)[1]
-        grid_size_x = tf.shape(x_true)[2]
+        grid_size_x = tf.shape(y_true)[2]
 
-        grid = tf.meshgrid(tf.range(grid_size_y), tf.range(grid_size_x))
+        grid = tf.meshgrid(tf.range(grid_size_x), tf.range(grid_size_y))
         grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)
-        true_xy = true_xy * tf.cast((grid_size_y, grid_size_x), tf.float32) - \
+        true_xy = true_xy * tf.cast((grid_size_x, grid_size_y), tf.float32) - \
             tf.cast(grid, tf.float32)
         true_wh = tf.math.log(true_wh / anchors)
         true_wh = tf.where(tf.math.is_inf(true_wh),
